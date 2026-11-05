@@ -12,6 +12,7 @@ from .db import fetchall, fetchone, get_con
 from .ingest import build_database
 from .pipeline import answer
 from .schemas import AskRequest, AskResponse, HealthResponse, StatsResponse
+from .telegram import close_telegram, initialize_telegram, router as telegram_router
 
 SUGGESTED = {
     "uz": [
@@ -43,7 +44,11 @@ async def lifespan(_: FastAPI):
     build_database(force=force)
     get_con()
     catalog.load()
-    yield
+    await initialize_telegram()
+    try:
+        yield
+    finally:
+        await close_telegram()
 
 
 app = FastAPI(title="UZEX Insight", version="1.0.0", lifespan=lifespan)
@@ -54,6 +59,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(telegram_router)
+
+
+@app.get("/")
+def root():
+    return {"status": "UZEX AI Agent running"}
 
 
 @app.get("/health", response_model=HealthResponse)

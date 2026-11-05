@@ -1,17 +1,22 @@
 services:
-  - type: worker
-    name: uzex-ai-agent
+  - type: web
+    name: uzex-ai-agent-webhook
     runtime: docker
-    plan: 1c-2g
+    plan: free
     region: frankfurt
-    numInstances: 1
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    dockerCommand: python src/bot.py
+    dockerCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
     envVars:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: OPENAI_API_KEY
         sync: false
+      - key: WEBHOOK_URL
+        fromService:
+          type: web
+          name: uzex-ai-agent-webhook
+          envVarKey: RENDER_EXTERNAL_URL
       - key: ENABLE_LLM_SQL
         value: "true"
