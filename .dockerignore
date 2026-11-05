@@ -10,5 +10,4 @@ __pycache__
 .ruff_cache
 frontend
 node_modules
-db/*.duckdb
 db/*.duckdb.wal

@@ -24,9 +24,11 @@ def set_connection(con: duckdb.DuckDBPyConnection) -> None:
 def get_con() -> duckdb.DuckDBPyConnection:
     global _con
     if _con is None:
-        if not Path(DB_PATH).exists():
-            raise RuntimeError("Database is not built yet. Run ingest first.")
-        _con = duckdb.connect(str(DB_PATH), read_only=True)
+        with _lock:
+            if _con is None:
+                if not Path(DB_PATH).exists():
+                    raise RuntimeError("Database is not available at the configured path.")
+                _con = duckdb.connect(str(DB_PATH), read_only=True)
     return _con
 
 

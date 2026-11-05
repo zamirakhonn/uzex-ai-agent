@@ -1,15 +1,12 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from .catalog import catalog
-from .config import DB_PATH, ENABLE_LLM_SQL, OPENAI_API_KEY
-from .db import fetchall, fetchone, get_con
-from .ingest import build_database
+from .config import ENABLE_LLM_SQL, OPENAI_API_KEY
+from .db import fetchall, fetchone
 from .pipeline import answer
 from .schemas import AskRequest, AskResponse, HealthResponse, StatsResponse
 from .telegram import close_telegram, initialize_telegram, router as telegram_router
@@ -40,10 +37,6 @@ SUGGESTED = {
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    force = not Path(DB_PATH).exists()
-    build_database(force=force)
-    get_con()
-    catalog.load()
     await initialize_telegram()
     try:
         yield
