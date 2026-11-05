@@ -15,15 +15,15 @@ INTENT_PATTERNS: list[tuple[str, list[str]]] = [
     ("dataset_stats", [r"nechta ishtirokchi", r"сколько участник", r"nechta broker", r"сколько брокер", r"nechta shartnoma", r"сколько контракт", r"dataset", r"статистика", r"umumiy"]),
     ("max_deal", [r"eng katta", r"самая крупн", r"максимальн", r"highest", r"eng yuqori summa", r"самая большая сумма"]),
     ("min_deal", [r"eng kichik", r"минимальн", r"самая маленьк"]),
-    ("top_company", [r"eng ko\s*p bitim", r"больше всего сделок", r"top kompaniya", r"лидер", r"eng faol"]),
-    ("top_product", [r"eng ko'?p sotil", r"популярн.*товар", r"top tovar", r"qaysi mahsulot"]),
+    ("top_company", [r"eng ko\s*p bitim", r"больше всего сделок", r"самые активн", r"top kompaniya", r"лидер", r"eng faol"]),
+    ("top_product", [r"eng ko\s*p sotil", r"популярн.*товар", r"топ.*продукт", r"товар\w* лидир", r"продукц\w* лидир", r"top tovar", r"qaysi mahsulot"]),
     ("top_region", [r"qaysi viloyat", r"какой регион", r"eng ko'?p.*region", r"по регионам"]),
     ("top_broker", [r"eng ko'?p.*broker", r"какой брокер", r"faol broker"]),
     ("company_deals", [r"kompaniya", r"компани", r"инн", r"stir", r"sotuvchi", r"продавец", r"xaridor", r"покупател"]),
     ("count_deals", [r"nechta bitim", r"сколько сделок", r"soni", r"количество сделок", r"necha bitim"]),
     ("sum_amount", [r"umumiy summa", r"общая сумма", r"jami summa", r"оборот", r"hajmi so.?m", r"сумма сделок"]),
     ("status_breakdown", [r"holatlar", r"по статусам", r"statuslar", r"состояния"]),
-    ("compare_years", [r"solishtir", r"сравни", r"versus", r"farqi", r"vs"]),
+    ("compare_years", [r"solishtir", r"сравни", r"versus", r"farqi", r"vs", r"yillik.*trend"]),
     ("product_stats", [r"бензин", r"хлоп", r"карбамид", r"масл", r"цемент", r"полиэтилен"]),
 ]
 
@@ -376,6 +376,8 @@ def plan_query(question: str) -> Plan:
         plan.sql = f"""
             SELECT COUNT(*) AS deals,
                    ROUND(SUM(amount_uzs), 2) AS amount_uzs,
+                   COUNT(*) FILTER (WHERE status IS DISTINCT FROM 'Аннулирован(Не оплачен)') AS deals_not_cancelled,
+                   COUNT(*) FILTER (WHERE status = 'Аннулирован(Не оплачен)') AS deals_cancelled,
                    COUNT(DISTINCT seller_inn) AS sellers,
                    COUNT(DISTINCT buyer_inn) AS buyers,
                    MIN(deal_date) AS min_date,

@@ -122,21 +122,21 @@ Language is auto-detected (Uzbek Latin, Uzbek Cyrillic, Russian). The UI can for
 |---|---|---|
 | Frontend | Vercel | `frontend/`, env `NEXT_PUBLIC_API_URL` |
 | Optional API | Render / Railway | `uvicorn backend.app.main:app` |
-| Telegram bot | Render Web Service | FastAPI webhook defined in `render.yaml` |
+| Telegram bot | Render Background Worker | aiogram long polling, one instance per token |
 | Docker | `docker compose up --build` | API `:8000`, web `:3000` |
 
-The webhook service builds DuckDB from the included CSVs if `db/uzex.duckdb` is missing, then loads the entity catalog before registering the Telegram webhook.
+The bot starts one aiogram polling process. It removes any existing webhook before polling and uses a local lock to prevent duplicate processes in the same container. Keep exactly one Render worker instance for each Telegram token.
 
-### Deploy the Telegram Webhook to Render
+### Deploy the Telegram Bot to Render
 
 1. Rotate any credentials that have been shared. Push the project to a Git provider connected to Render; `.env` is ignored by Git and must never be committed.
-2. Stop or delete the old polling worker before activating the webhook service. Render does not support changing an existing service's type, so the Blueprint creates a new service named `uzex-ai-agent-webhook`.
-3. In Render, choose **New +** → **Blueprint**, select the repository, and apply `render.yaml`. It creates a Docker Web Service with health check `GET /`. `WEBHOOK_URL` is populated from the service's Render URL and the app appends `/telegram/webhook` automatically.
-4. Set the rotated `TELEGRAM_BOT_TOKEN` and `OPENAI_API_KEY` in the service's Environment settings. They are marked `sync: false` in the Blueprint and are never committed. `ENABLE_LLM_SQL=true` enables the optional OpenAI SQL fallback.
-5. Deploy and check the Logs for `Telegram webhook registered` and successful startup. Verify `https://<service>.onrender.com/` returns `{"status":"UZEX AI Agent running"}`.
-6. In Telegram, send `/start`, then ask `2025 yilda nechta bitim tuzilgan?`. Also try `ABC kompaniyasi qancha bitim qilgan?` and confirm it returns the not-found response.
+2. Stop or delete any other process polling with the same Telegram token.
+3. In Render, choose **New +** → **Blueprint**, select the repository, and apply `render.yaml`. It creates one Docker Background Worker named `uzex-ai-agent-polling`.
+4. Set the rotated `TELEGRAM_BOT_TOKEN` and `OPENAI_API_KEY` in the worker's Environment settings. They are marked `sync: false` in the Blueprint. `ENABLE_LLM_SQL=true` enables the optional OpenAI SQL fallback.
+5. Deploy and check the Logs for `Removed any existing webhook; starting the single polling process` and `Start polling`.
+6. In Telegram, send `/start`, then test the Russian 2024 count, each menu button, and an unknown-company query. Confirm the response includes data-backed values, source, verification, confidence, and runtime.
 
-The Blueprint uses Render's `free` web plan. Free web services can spin down after inactivity, so the first Telegram message after idle may be delayed while the service wakes. Choose a paid always-on plan if immediate 24/7 responses are required. Keep only one active webhook service for a bot token.
+Render does not offer a free continuously running Background Worker; the Blueprint uses the `0.5c-512mb` worker plan. Do not scale the service above one instance: simultaneous polling with the same token causes Telegram `getUpdates` conflicts.
 
 ---
 

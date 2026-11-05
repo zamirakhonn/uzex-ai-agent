@@ -8,5 +8,4 @@ COPY backend ./backend
 COPY src ./src
 COPY data ./data
 COPY db ./db
-EXPOSE 8000
-CMD ["sh", "-c", "uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["python", "src/bot.py"]

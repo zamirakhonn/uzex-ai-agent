@@ -1,6 +1,6 @@
+import os
 import sys
 from pathlib import Path
-import os
 
 from dotenv import load_dotenv
 
@@ -10,11 +10,10 @@ if str(PROJECT_ROOT) not in sys.path:
 
 load_dotenv(PROJECT_ROOT / ".env")
 
-if __name__ == "__main__":
-    import uvicorn
+from backend.app.telegram import run_polling
 
-    uvicorn.run(
-        "backend.app.main:app",
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", "8000")),
-    )
+
+if __name__ == "__main__":
+    import asyncio
+
+    asyncio.run(run_polling())

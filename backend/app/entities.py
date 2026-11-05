@@ -26,7 +26,6 @@ STATUS_MAP = [
     (r"частичн|qisman|partial", "Исполнен(Частично)"),
     (r"исполнен|ijro etilgan|bajarilgan", "Исполнен"),
     (r"не подписан|imzolanmagan", "Не подписан"),
-    (r"заключен", "Заключен"),
     (r"ждёт оплату|to'?lov kutil", "Ждёт оплату"),
     (r"оплачен|to'?langan", "Оплачен"),
     (r"\bновый\b|\byangi\b", "Новый"),
@@ -93,6 +92,8 @@ def extract(question: str) -> Extracted:
         if re.search(pat, low, re.I):
             out.status = status
             break
+    if out.status is None and re.search(r"статус|состояни", low, re.I) and re.search(r"заключен", low, re.I):
+        out.status = "Заключен"
     if out.status is None and re.search(
         r"(?:holat|status).{0,24}\btuzilgan\b|\btuzilgan\b.{0,24}(?:holat|status)",
         low,

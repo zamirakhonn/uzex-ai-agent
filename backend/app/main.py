@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,7 +7,6 @@ from .config import ENABLE_LLM_SQL, OPENAI_API_KEY
 from .db import fetchall, fetchone
 from .pipeline import answer
 from .schemas import AskRequest, AskResponse, HealthResponse, StatsResponse
-from .telegram import close_telegram, initialize_telegram, router as telegram_router
 
 SUGGESTED = {
     "uz": [
@@ -35,16 +32,7 @@ SUGGESTED = {
 }
 
 
-@asynccontextmanager
-async def lifespan(_: FastAPI):
-    await initialize_telegram()
-    try:
-        yield
-    finally:
-        await close_telegram()
-
-
-app = FastAPI(title="UZEX Insight", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="UZEX Insight", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -52,9 +40,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(telegram_router)
-
-
 @app.get("/")
 def root():
     return {"status": "UZEX AI Agent running"}
