@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment secrets
+.env
+!.env.example
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Generated AI/vector files
+embeddings/
+vectorstore/
+
+# OS files
+.DS_Store
+
+# Logs
+*.log
+
+# Database
+# Keep db/uzex.duckdb tracked for Render deployment
+db/*.duckdb.wal
+db/*.duckdb.tmp

@@ -1,0 +1,17 @@
+services:
+  - type: worker
+    name: uzex-ai-agent
+    runtime: docker
+    plan: 1c-2g
+    region: frankfurt
+    numInstances: 1
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: python src/bot.py
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ENABLE_LLM_SQL
+        value: "true"

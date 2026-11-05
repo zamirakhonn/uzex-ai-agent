@@ -1,0 +1,23 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data:ro
+      - ./db:/app/db
+    environment:
+      PORT: 8000
+      ENABLE_LLM_SQL: "false"
+  web:
+    image: node:22-alpine
+    working_dir: /src
+    volumes:
+      - ./frontend:/src
+    command: sh -c "npm install && npm run dev -- --hostname 0.0.0.0"
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - api

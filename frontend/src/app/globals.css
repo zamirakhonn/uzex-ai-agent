@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --bg: #07090f;
+  --panel: rgba(16, 20, 32, 0.82);
+  --line: rgba(255, 255, 255, 0.08);
+  --gold: #e8c547;
+  --mint: #6ee7c5;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--bg);
+  color: #eef2ff;
+}
+
+body {
+  background-image:
+    radial-gradient(1200px 600px at 10% -10%, rgba(110, 231, 197, 0.12), transparent 50%),
+    radial-gradient(900px 500px at 90% 0%, rgba(232, 197, 71, 0.1), transparent 45%),
+    linear-gradient(180deg, #07090f 0%, #0b1020 100%);
+}
+
+.glass {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(18px);
+}
+
+.grid-fade {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+@keyframes pulse-bar {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scaleX(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}

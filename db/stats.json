@@ -1,0 +1,41 @@
+{
+  "deals": 500000,
+  "contracts": 6616,
+  "participants": 14392,
+  "brokers": 120,
+  "usd_rates": 1765,
+  "min_date": "2022-01-03 00:00:00",
+  "max_date": "2026-10-30 00:00:00",
+  "executed": 431061,
+  "export_deals": 6590,
+  "amount_uzs_total": 220477157554429.88,
+  "by_year": [
+    {
+      "year": 2022,
+      "deals": 84299,
+      "amount_uzs": 29934581605629.88
+    },
+    {
+      "year": 2023,
+      "deals": 93985,
+      "amount_uzs": 36616596290597.62
+    },
+    {
+      "year": 2024,
+      "deals": 106647,
+      "amount_uzs": 45900904000492.24
+    },
+    {
+      "year": 2025,
+      "deals": 115763,
+      "amount_uzs": 55976577480267.52
+    },
+    {
+      "year": 2026,
+      "deals": 99306,
+      "amount_uzs": 52048498177445.03
+    }
+  ],
+  "db_path": "/Users/zamirasmacbook/Desktop/uzex-agent/db/uzex.duckdb",
+  "db_mb": 75.5
+}
