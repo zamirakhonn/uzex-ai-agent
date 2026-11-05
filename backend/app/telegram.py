@@ -124,11 +124,33 @@ def format_telegram_answer(result: AskResponse) -> str:
         details = []
         insight = None
 
-    sections = [conclusion]
+    sections = [conclusion] if not result.found else [
+        "📊 Результат" if language == "ru" else "📊 Natija",
+        conclusion,
+    ]
     if details:
         sections.extend(["", "• " + "\n\n• ".join(details)])
     if insight:
-        sections.extend(["", html.escape(insight)])
+        sections.extend([
+            "",
+            "💡 Что это значит:" if language == "ru" else "💡 Qisqa tahlil:",
+            html.escape(insight),
+        ])
+
+    if result.found and result.verification.passed:
+        learning_note = _learning_note(result)
+        if learning_note:
+            sections.extend([
+                "",
+                "💡 Что это значит:" if language == "ru" else "💡 Qisqa tahlil:",
+                html.escape(learning_note),
+            ])
+        suggestions = _suggested_questions(result.intent, language)
+        sections.extend([
+            "",
+            "💬 Что спросить дальше:" if language == "ru" else "💬 Keyingi savollar:",
+            *[f"• {html.escape(question)}" for question in suggestions],
+        ])
 
     source_lines = _format_source(result)
     if source_lines:
@@ -148,6 +170,70 @@ def format_telegram_answer(result: AskResponse) -> str:
     if result.sql and _wants_sql(result.question):
         sections.extend(["", "run_sql", f"<pre>{html.escape(result.sql.strip())}</pre>"])
     return "\n".join(sections)
+
+
+def _learning_note(result: AskResponse) -> str | None:
+    language = result.language
+    if result.intent == "count_deals":
+        row = result.rows[0]
+        total = row.get("deals")
+        cancelled = row.get("deals_cancelled")
+        if total and cancelled is not None:
+            share = float(cancelled) / float(total) * 100
+            if language == "ru":
+                return f"Аннулированные сделки составляют {share:.1f}% от общего числа."
+            return f"Bekor qilingan bitimlar jami sonning {share:.1f}% ini tashkil qiladi."
+
+    if result.intent == "compare_years" and len(result.rows) > 1:
+        lower, higher = sorted(result.rows[:2], key=lambda row: float(row.get("deals", 0)))
+        difference = float(higher.get("deals", 0)) - float(lower.get("deals", 0))
+        if difference > 0:
+            amount = _format_number(difference)
+            if language == "ru":
+                return f"В {higher.get('year')} году на {amount} сделок больше, чем в {lower.get('year')} году."
+            return f"{higher.get('year')} yilda {lower.get('year')} yilga nisbatan {amount} ta ko'p bitim bo'lgan."
+
+    if result.intent in {"top_company", "top_product"} and len(result.rows) > 1:
+        name_key = "name" if result.intent == "top_company" else "product"
+        first, second = result.rows[:2]
+        difference = float(first.get("deals", 0)) - float(second.get("deals", 0))
+        if difference > 0:
+            first_name = str(first.get(name_key) or "")
+            second_name = str(second.get(name_key) or "")
+            amount = _format_number(difference)
+            label = "сделок" if language == "ru" else "ta bitim"
+            if language == "ru":
+                return f"{first_name} опережает {second_name} на {amount} {label}."
+            return f"{first_name}, {second_name}ga nisbatan {amount} {label} ko'p."
+    return None
+
+
+def _suggested_questions(intent: str, language: Language) -> list[str]:
+    questions = {
+        "uz": {
+            "count_deals": ["2024 va 2025 yillarni solishtiring", "Eng faol kompaniya qaysi?"],
+            "compare_years": ["Eng faol kompaniya qaysi?", "Qaysi mahsulotlar yetakchi?"],
+            "top_company": ["Eng yirik bitim qaysi?", "2024 va 2025 yillarni solishtiring"],
+            "top_product": ["Eng yirik bitim qaysi?", "2024 yilda nechta bitim bo'lgan?"],
+            "max_deal": ["Eng faol kompaniya qaysi?", "Qaysi mahsulotlar yetakchi?"],
+            "min_deal": ["2024 yilda nechta bitim bo'lgan?", "Eng faol kompaniya qaysi?"],
+            "company_deals": ["2024 va 2025 yillardagi faolligini solishtiring", "Eng yirik bitim qaysi?"],
+        },
+        "ru": {
+            "count_deals": ["Сравните 2024 и 2025 годы", "Какая компания самая активная?"],
+            "compare_years": ["Какая компания самая активная?", "Какие товары лидируют?"],
+            "top_company": ["Какая сделка была крупнейшей?", "Сравните 2024 и 2025 годы"],
+            "top_product": ["Какая сделка была крупнейшей?", "Сколько сделок было в 2024 году?"],
+            "max_deal": ["Какая компания самая активная?", "Какие товары лидируют?"],
+            "min_deal": ["Сколько сделок было в 2024 году?", "Какая компания самая активная?"],
+            "company_deals": ["Сравните активность за 2024 и 2025 годы", "Какая сделка была крупнейшей?"],
+        },
+    }
+    fallback = {
+        "uz": ["2025 yilda nechta bitim tuzilgan?", "Eng faol kompaniya qaysi?"],
+        "ru": ["Сколько сделок было в 2025 году?", "Какая компания самая активная?"],
+    }
+    return questions[language].get(intent, fallback[language])
 
 
 def _format_result_details(result: AskResponse) -> tuple[str, list[str], str | None]:

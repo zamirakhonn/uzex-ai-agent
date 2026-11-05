@@ -82,6 +82,11 @@ def test_russian_count_formatter_uses_verified_result_rows():
     assert "deals" in text
     assert "year=2024" in text
     assert "106 647 записей" in text
+    assert "📊 Результат" in text
+    assert "💡 Что это значит:" in text
+    assert "6.9%" in text
+    assert "💬 Что спросить дальше:" in text
+    assert "Сравните 2024 и 2025 годы" in text
     assert "✓ числа подтверждены" in text
     assert "0.1 с" in text
     assert "run_sql" not in text
@@ -103,7 +108,27 @@ def test_unverified_result_is_not_reported_as_verified():
     text = format_telegram_answer(result)
 
     assert "По имеющимся данным ответ не найден." in text
+    assert "Что спросить дальше" not in text
     assert "не пройдена" in text
+
+
+def test_year_comparison_insight_handles_ascending_year_rows():
+    result = AskResponse(
+        question="Сравните 2024 и 2025 годы",
+        language="ru",
+        found=True,
+        answer="Comparison",
+        confidence=0.95,
+        intent="compare_years",
+        reasoning_summary="SQL rows",
+        rows=[{"year": 2024, "deals": 10}, {"year": 2025, "deals": 15}],
+        execution_ms=10,
+        verification=Verification(passed=True, method="row_bound"),
+    )
+
+    text = format_telegram_answer(result)
+
+    assert "В 2025 году на 5 сделок больше, чем в 2024 году." in text
 
 
 def test_empty_results_use_localized_not_found_copy():
